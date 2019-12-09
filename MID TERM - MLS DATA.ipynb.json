@@ -1,0 +1,978 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# More Money, More Problems"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Midterm Project - MLS Data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "By: DeL"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Abstract"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This is the Big Data and Analytics Midterm project. In this lab, I will be looking at a dataset about salaries in the U.S. I am interested in finding out different salaries and am wondering do men in the U.S. have the right to complain about salary when the women are paid so little. \n",
+    "\n",
+    "Some questions I am looking to answer (some may based on outside research):\n",
+    "\n",
+    "* What is the highest salary?\n",
+    "* What is the lowest salary? \n",
+    "* Who is paid the most? the least?\n",
+    "* Do certain positions get paid more?\n",
+    "* Is there a salary cap?\n",
+    "* What is the average salary?\n",
+    "* Do certain clubs (teams) pay their players more? \n",
+    "\n",
+    "I also want to look at how women in the U.S. are being paid, they are paid a lot less than men. This would be based on outside research about the min and max salary of players in the NWSL."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Dataset Preperation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This site has data on MLS salaries dating back to 2007 but I am going to look at the most recent year, which is 2017. This data set is from https://www.kaggle.com/crawford/us-major-league-soccer-salaries#mls-salaries-2017.csv and contains 6 columns which include: club, last name, first name, position, base salary and guarteened compensation. I will be looking at a few things. First, I want to find the max, min and average salary. From there I want to look at teams and see what club the player that is paid the most plays for. I also want to look at position and see if that plays a role in salary. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this cell of code, I am going to define everything so that when I get further into the lab, I am able to pull things out of my data. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import math as m\n",
+    "import numpy as np\n",
+    "import scipy as sp\n",
+    "import pandas as pd\n",
+    "import matplotlib as plt\n",
+    "import matplotlib.pyplot as plt\n",
+    "import seaborn as sns  #IMPORTANT - UPGRADE SEABORN TO VERSION 0.9.0 IN ANACONDA ENV\n",
+    "import statsmodels.api as sm\n",
+    "import statsmodels.formula.api as smf\n",
+    "\n",
+    "my_df = pd.read_csv (\"mls-salaries-2017.csv\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "I am going to use the head function to make sure my code works and that I have successfully opened the csv file. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>club</th>\n",
+       "      <th>last_name</th>\n",
+       "      <th>first_name</th>\n",
+       "      <th>position</th>\n",
+       "      <th>base_salary</th>\n",
+       "      <th>guaranteed_compensation</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Almiron</td>\n",
+       "      <td>Miguel</td>\n",
+       "      <td>M</td>\n",
+       "      <td>1912500.0</td>\n",
+       "      <td>2297000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Ambrose</td>\n",
+       "      <td>Mikey</td>\n",
+       "      <td>D</td>\n",
+       "      <td>65625.0</td>\n",
+       "      <td>65625.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Asad</td>\n",
+       "      <td>Yamil</td>\n",
+       "      <td>M</td>\n",
+       "      <td>150000.0</td>\n",
+       "      <td>150000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Bloom</td>\n",
+       "      <td>Mark</td>\n",
+       "      <td>D</td>\n",
+       "      <td>99225.0</td>\n",
+       "      <td>106573.89</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Carleton</td>\n",
+       "      <td>Andrew</td>\n",
+       "      <td>F</td>\n",
+       "      <td>65000.0</td>\n",
+       "      <td>77400.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Carmona</td>\n",
+       "      <td>Carlos</td>\n",
+       "      <td>M</td>\n",
+       "      <td>675000.0</td>\n",
+       "      <td>725000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>6</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Garza</td>\n",
+       "      <td>Greg</td>\n",
+       "      <td>D</td>\n",
+       "      <td>150000.0</td>\n",
+       "      <td>150000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>7</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Gonzalez Pirez</td>\n",
+       "      <td>Leandro</td>\n",
+       "      <td>D</td>\n",
+       "      <td>250008.0</td>\n",
+       "      <td>285008.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>8</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Goslin</td>\n",
+       "      <td>Chris</td>\n",
+       "      <td>M</td>\n",
+       "      <td>70000.0</td>\n",
+       "      <td>74000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>9</th>\n",
+       "      <td>ATL</td>\n",
+       "      <td>Gressel</td>\n",
+       "      <td>Julian</td>\n",
+       "      <td>M</td>\n",
+       "      <td>75000.0</td>\n",
+       "      <td>93750.00</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "  club       last_name first_name position  base_salary  \\\n",
+       "0  ATL         Almiron     Miguel        M    1912500.0   \n",
+       "1  ATL         Ambrose      Mikey        D      65625.0   \n",
+       "2  ATL            Asad      Yamil        M     150000.0   \n",
+       "3  ATL           Bloom       Mark        D      99225.0   \n",
+       "4  ATL        Carleton     Andrew        F      65000.0   \n",
+       "5  ATL         Carmona     Carlos        M     675000.0   \n",
+       "6  ATL           Garza       Greg        D     150000.0   \n",
+       "7  ATL  Gonzalez Pirez    Leandro        D     250008.0   \n",
+       "8  ATL          Goslin      Chris        M      70000.0   \n",
+       "9  ATL         Gressel     Julian        M      75000.0   \n",
+       "\n",
+       "   guaranteed_compensation  \n",
+       "0               2297000.00  \n",
+       "1                 65625.00  \n",
+       "2                150000.00  \n",
+       "3                106573.89  \n",
+       "4                 77400.00  \n",
+       "5                725000.00  \n",
+       "6                150000.00  \n",
+       "7                285008.00  \n",
+       "8                 74000.00  \n",
+       "9                 93750.00  "
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "my_df.head (10)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now that I have opened the first 10 on my dataset, I will look at the more specific parts of my dataset. I will look at index, columns. Later on in Data Modeling - I will look at info and describe!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "RangeIndex(start=0, stop=616, step=1)"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "my_df.index"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "* Index tells me the data index of the variable. \n",
+    "* In this case we confirm that my_df.index is actually the range starting from the 0."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Index(['club', 'last_name', 'first_name', 'position', 'base_salary',\n",
+       "       'guaranteed_compensation'],\n",
+       "      dtype='object')"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "my_df.columns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "* Columns tells me the data columns of the variable. \n",
+    "* In this case we confirm that my_df.columns is the name of the columns"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Data Modeling"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "I am going to use my best friend: info to see if there is missing data and see how many columns there are."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "<class 'pandas.core.frame.DataFrame'>\n",
+      "RangeIndex: 616 entries, 0 to 615\n",
+      "Data columns (total 6 columns):\n",
+      "club                       614 non-null object\n",
+      "last_name                  616 non-null object\n",
+      "first_name                 612 non-null object\n",
+      "position                   616 non-null object\n",
+      "base_salary                616 non-null float64\n",
+      "guaranteed_compensation    616 non-null float64\n",
+      "dtypes: float64(2), object(4)\n",
+      "memory usage: 29.0+ KB\n"
+     ]
+    }
+   ],
+   "source": [
+    "my_df.info()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "From this, it looks like their is missing data in two of the columns. There are two pieces of missing data in the club column and four pieces of data in the first name column. I think with this data, I am just going to ignore the missing pieces. There are only five total pieces of data missing out of 615, which isn't going to change the data. The only things missing are names and clubs. I do not really need those to figure out the min, max and average salary. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now, I am going to use my second best friend describe to see the min, max and average of salaries. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>base_salary</th>\n",
+       "      <th>guaranteed_compensation</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>count</th>\n",
+       "      <td>6.160000e+02</td>\n",
+       "      <td>6.160000e+02</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>mean</th>\n",
+       "      <td>2.969777e+05</td>\n",
+       "      <td>3.261392e+05</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>std</th>\n",
+       "      <td>6.715792e+05</td>\n",
+       "      <td>7.480007e+05</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>min</th>\n",
+       "      <td>5.299992e+04</td>\n",
+       "      <td>5.299992e+04</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>25%</th>\n",
+       "      <td>6.563130e+04</td>\n",
+       "      <td>6.990325e+04</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>50%</th>\n",
+       "      <td>1.250000e+05</td>\n",
+       "      <td>1.350020e+05</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>75%</th>\n",
+       "      <td>2.553750e+05</td>\n",
+       "      <td>2.809390e+05</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>max</th>\n",
+       "      <td>6.660000e+06</td>\n",
+       "      <td>7.167500e+06</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "        base_salary  guaranteed_compensation\n",
+       "count  6.160000e+02             6.160000e+02\n",
+       "mean   2.969777e+05             3.261392e+05\n",
+       "std    6.715792e+05             7.480007e+05\n",
+       "min    5.299992e+04             5.299992e+04\n",
+       "25%    6.563130e+04             6.990325e+04\n",
+       "50%    1.250000e+05             1.350020e+05\n",
+       "75%    2.553750e+05             2.809390e+05\n",
+       "max    6.660000e+06             7.167500e+06"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "my_df.describe()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This is very useful because it shows me the min,max and average of salaries in the MLS. I will use this data to analyize what it means. Describe tells me the numerical points I need to know. Thanks to describe, I do not have to do a ton of work.\n",
+    "\n",
+    "From this data I know all of the min, max and averages of number salary and guaranteed compensation. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "From describe, I am able to conclude this data: \n",
+    "\n",
+    "Salary: \n",
+    "\n",
+    "* Min Salary: 52,999 dollars\n",
+    "* Max Salary: 6,660,000 dollars\n",
+    "* Average Salary: 296,977 dollars\n",
+    "\n",
+    "Guaranteed Compensation: \n",
+    "\n",
+    "* Min Compensation: 52,999 dollars\n",
+    "* Max Compensation: 7,167,500 dollars\n",
+    "* Average Compensation: 326,139 dollars"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "I am going to use pandas to group by club!! This will help me see the breakdown of pay between clubs and their players. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>last_name</th>\n",
+       "      <th>first_name</th>\n",
+       "      <th>position</th>\n",
+       "      <th>base_salary</th>\n",
+       "      <th>guaranteed_compensation</th>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>club</th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "      <th></th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>ATL</th>\n",
+       "      <td>Almiron</td>\n",
+       "      <td>Miguel</td>\n",
+       "      <td>M</td>\n",
+       "      <td>1912500.00</td>\n",
+       "      <td>2297000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>CHI</th>\n",
+       "      <td>Accam</td>\n",
+       "      <td>David</td>\n",
+       "      <td>F-M</td>\n",
+       "      <td>750000.00</td>\n",
+       "      <td>820937.50</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>CLB</th>\n",
+       "      <td>Abu</td>\n",
+       "      <td>Mohammed</td>\n",
+       "      <td>M</td>\n",
+       "      <td>165000.00</td>\n",
+       "      <td>171250.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>COL</th>\n",
+       "      <td>Adjei-Boateng</td>\n",
+       "      <td>Bismark</td>\n",
+       "      <td>M</td>\n",
+       "      <td>300000.00</td>\n",
+       "      <td>341246.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>DAL</th>\n",
+       "      <td>Acosta</td>\n",
+       "      <td>Kellyn</td>\n",
+       "      <td>M</td>\n",
+       "      <td>260000.00</td>\n",
+       "      <td>280000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>DC</th>\n",
+       "      <td>Acosta</td>\n",
+       "      <td>Luciano</td>\n",
+       "      <td>M-F</td>\n",
+       "      <td>500000.00</td>\n",
+       "      <td>602000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>HOU</th>\n",
+       "      <td>Alexander</td>\n",
+       "      <td>Eric</td>\n",
+       "      <td>M</td>\n",
+       "      <td>190000.00</td>\n",
+       "      <td>203750.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>KC</th>\n",
+       "      <td>Abdul-Salaam</td>\n",
+       "      <td>Saad</td>\n",
+       "      <td>D</td>\n",
+       "      <td>96800.00</td>\n",
+       "      <td>110550.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>LA</th>\n",
+       "      <td>Alessandrini</td>\n",
+       "      <td>Romain</td>\n",
+       "      <td>M</td>\n",
+       "      <td>1669400.64</td>\n",
+       "      <td>1999400.64</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>LAFC</th>\n",
+       "      <td>Alvarez</td>\n",
+       "      <td>Carlos</td>\n",
+       "      <td>M</td>\n",
+       "      <td>65004.00</td>\n",
+       "      <td>65004.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>MNUFC</th>\n",
+       "      <td>Alvbage</td>\n",
+       "      <td>John</td>\n",
+       "      <td>GK</td>\n",
+       "      <td>229998.00</td>\n",
+       "      <td>247748.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>MTL</th>\n",
+       "      <td>Arregui</td>\n",
+       "      <td>Adrian</td>\n",
+       "      <td>M</td>\n",
+       "      <td>240000.00</td>\n",
+       "      <td>290976.67</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>NE</th>\n",
+       "      <td>Agudelo</td>\n",
+       "      <td>Juan</td>\n",
+       "      <td>F</td>\n",
+       "      <td>475000.00</td>\n",
+       "      <td>502500.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>NYCFC</th>\n",
+       "      <td>Allen</td>\n",
+       "      <td>RJ</td>\n",
+       "      <td>D</td>\n",
+       "      <td>100000.08</td>\n",
+       "      <td>101666.75</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>NYRB</th>\n",
+       "      <td>Abang</td>\n",
+       "      <td>Anatole</td>\n",
+       "      <td>F</td>\n",
+       "      <td>65625.00</td>\n",
+       "      <td>65625.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>ORL</th>\n",
+       "      <td>Aja</td>\n",
+       "      <td>Jose</td>\n",
+       "      <td>D</td>\n",
+       "      <td>216000.00</td>\n",
+       "      <td>216000.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>PHI</th>\n",
+       "      <td>Alberg</td>\n",
+       "      <td>Roland</td>\n",
+       "      <td>M</td>\n",
+       "      <td>345000.00</td>\n",
+       "      <td>394250.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>POR</th>\n",
+       "      <td>Adi</td>\n",
+       "      <td>Fanendo</td>\n",
+       "      <td>F</td>\n",
+       "      <td>1190004.00</td>\n",
+       "      <td>1736254.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>RSL</th>\n",
+       "      <td>Acosta</td>\n",
+       "      <td>Danilo</td>\n",
+       "      <td>M</td>\n",
+       "      <td>65625.00</td>\n",
+       "      <td>65625.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>SEA</th>\n",
+       "      <td>Adekoya</td>\n",
+       "      <td>Seyi</td>\n",
+       "      <td>F</td>\n",
+       "      <td>53004.00</td>\n",
+       "      <td>53004.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>SJ</th>\n",
+       "      <td>Alashe</td>\n",
+       "      <td>Fatai</td>\n",
+       "      <td>M</td>\n",
+       "      <td>98175.00</td>\n",
+       "      <td>114425.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>TOR</th>\n",
+       "      <td>Alseth</td>\n",
+       "      <td>Oyvind</td>\n",
+       "      <td>M-D</td>\n",
+       "      <td>53004.00</td>\n",
+       "      <td>53004.00</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>VAN</th>\n",
+       "      <td>Adekugbe</td>\n",
+       "      <td>Samuel</td>\n",
+       "      <td>D</td>\n",
+       "      <td>80000.00</td>\n",
+       "      <td>85000.00</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "           last_name first_name position  base_salary  guaranteed_compensation\n",
+       "club                                                                          \n",
+       "ATL          Almiron     Miguel        M   1912500.00               2297000.00\n",
+       "CHI            Accam      David      F-M    750000.00                820937.50\n",
+       "CLB              Abu   Mohammed        M    165000.00                171250.00\n",
+       "COL    Adjei-Boateng    Bismark        M    300000.00                341246.00\n",
+       "DAL           Acosta     Kellyn        M    260000.00                280000.00\n",
+       "DC            Acosta    Luciano      M-F    500000.00                602000.00\n",
+       "HOU        Alexander       Eric        M    190000.00                203750.00\n",
+       "KC      Abdul-Salaam       Saad        D     96800.00                110550.00\n",
+       "LA      Alessandrini     Romain        M   1669400.64               1999400.64\n",
+       "LAFC         Alvarez     Carlos        M     65004.00                 65004.00\n",
+       "MNUFC        Alvbage       John       GK    229998.00                247748.00\n",
+       "MTL          Arregui     Adrian        M    240000.00                290976.67\n",
+       "NE           Agudelo       Juan        F    475000.00                502500.00\n",
+       "NYCFC          Allen         RJ        D    100000.08                101666.75\n",
+       "NYRB           Abang    Anatole        F     65625.00                 65625.00\n",
+       "ORL              Aja       Jose        D    216000.00                216000.00\n",
+       "PHI           Alberg     Roland        M    345000.00                394250.00\n",
+       "POR              Adi    Fanendo        F   1190004.00               1736254.00\n",
+       "RSL           Acosta     Danilo        M     65625.00                 65625.00\n",
+       "SEA          Adekoya       Seyi        F     53004.00                 53004.00\n",
+       "SJ            Alashe      Fatai        M     98175.00                114425.00\n",
+       "TOR           Alseth     Oyvind      M-D     53004.00                 53004.00\n",
+       "VAN         Adekugbe     Samuel        D     80000.00                 85000.00"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# applying group() funtions to \n",
+    "# group the data on team value \n",
+    "\n",
+    "gk = my_df.groupby ('club')\n",
+    "\n",
+    "type (gk)\n",
+    "\n",
+    "# Let's print the first entries \n",
+    "# In all the groups formed \n",
+    "gk.first ()\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "I am going to make a barplot to show me where the median, min and max base salaries are so it can show in a viz what describe told me above. It is very benefical to see this data used in a graph."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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UlNTTW1tramsrDQxMTHm9OnTbb7uBjk5OeYXv/iFmTt3bqvWd+LECZOcnGyqqqrMlStXzOjRo01paWmjeuvr681jjz3mdU7+3mOted37KiwsNI899pgpLi42NTU15oknnjDZ2dnt5jqxpUVmujk5OfrlL3+pbt26qXPnzho7dqx27drVEk379cEHH+gPf/iDIiIiJElffPGFHnjgAfXp00fBwcFyuVzatWuX/vvf/6qqqkoDBw6UJI0fP167du1SbW2tPv/8c40dO9ZrvSRlZ2fL5XJJkpKSkvTpp5+qtrZW2dnZGjdunCRp6NChKikp0YULF/TJJ5/I6XQqKChIkZGRuu+++3Ts2LFGNffo0UPz5s1Thw4dFBISogcffFD5+fltvu5HH31Uf/nLXxQcHKxvvvlGbrdb5eXlbb5uSSorK9PKlSv17LPPSlKr1vfpp58qNjZWoaGhuvfee/Xoo48qOzu7Uc15eXmSpGnTpmncuHFav3693/dYa173vjIzM+V0OtWrVy+FhIRo5cqV6tSpU7u4TmxqkdC9dOmSevTo4VmOiIjQxYsXW6Jpv5YsWaIhQ4bctgbf9T169NDFixdVWlqqrl27Kjg42Gu9b1vBwcHq2rWrSkpKmmzr66+/1qVLlzzhf/N6Xz/5yU88F1l+fr527twph8PR5uuWpJCQEGVkZCgxMVHDhg1rF+MtSa+++qpmz56te+65p1Fftutrbt3l5eUaNmyY/vSnP+m9997Txo0bdeHChWaNt83XwVdBQYHcbreeffZZJScna8OGDe3mOrGpRUK3vr7e66E4xhjrD8nxV4O/9U3V6K9mY4yCgoIaHdOwvqk+mnrQRYOvvvpK06ZN00svvaQ+ffq0m7pnzZqlgwcPqri4WPn5+W2+7g8//FD33Xefhg0b5lnXmvXV19c3aqupugcNGqTly5crLCxM3bt318SJE5WRkfGtxtvGefpyu906ePCgXn/9dW3atElffPGFioqK2vx1YluLVNCrVy/PTW1Junz5stdXGBv81eC7/sqVK4qIiFD37t119epVud3uRjVHREToypUrkqS6ujpVVFSoW7du6tmzpy5dutSorV69ejW5vilHjx7V008/rTlz5iglJaVd1H327FmdPn1aktSpUyfFxcXp0KFDbb7ujz76SAcOHFBycrIyMjKUlZWlzZs3t1p9zX2f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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "sns.set(style='whitegrid')\n",
+    "\n",
+    "ax = sns.boxplot(x=my_df['base_salary']) "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Data Analysis "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "From the functions I used above, I was able to find out the min, max, avergage of both the base salary and guaranteed compensation. I was also able to find who was the highest paid player in 2017 and who the lowest paid player was. \n",
+    "\n",
+    "Salary: \n",
+    "\n",
+    "* Min Salary: 52,999 dollars\n",
+    "* Max Salary: 6,660,000 dollars\n",
+    "* Average Salary: 296,977 dollars\n",
+    "\n",
+    "Guaranteed Compensation: \n",
+    "\n",
+    "* Min Compensation: 52,999 dollars\n",
+    "* Max Compensation: 7,167,500 dollars\n",
+    "* Average Compensation: 326,139 dollars\n",
+    "\n",
+    "The highest paid player was Kaka - a Brazilian international playing in the MLS. He was paid 6,600,000 dollars during the 2017 MLS season. It makes sense for a player of his caliber to be paid as much as he did. \n",
+    "\n",
+    "The lowest paid player was a player from Seattle named Nouhou Tolo. I am not shocked he was paud so little because he was signed from Sounders 2 which is like a minor league for soccer."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Conclusions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "I always find it very interesting when looking at salaries. I always wonder how some men can complain about the amount of money they are making when women make a small percentage of what they make. The amount a player in the NWSL makes ranges from about 17,000 dollars to 50,000 dollars - that is not a living wage and many of them have to play year round in other countries to make enough money. I found that the min salary in the MLS is 52,999 dollars and the maximum is well over 6 million dollars. In general, I think that professional athletes are paid way more than necessary. I understand the putting your body through intense training but I have a problem when athletes (specifically male athletes) are paid more than teachers, business owners, surgeons. Overall, pay in sports is an interesting topic and I think there is much to debate from this small dataset. I believe that all athletes should be paid equally for doing the same job. I sort of went on a tangent from the dataset about the MLS but the USWNT and women in the NWSL deserve to be paid more especially after seeing the salary of the men in the MLS. I really enjoyed this lab. Pay discrimination and salaries are very interesting to me because there is a huge story within the numbers. I found that lab a little challenging trying to get the graphs to run. Overall, I learned a lot and am glad I was able to show all that I have learned so far in Big data! Another challenge I had was while working through this nothing was running and I was very confused why - I took like an hour to figure out what was going wrong but realized that I spelled something wrong and I didn't define my dataset in the same way."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "For my graph in conclusions - I am going to use a histogram to help me figure out the frequency in the values of the mls data. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 45,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(array([  0., 243., 104.,  59.,  47.,  30.,  22.,  15.,   9.,  18.]),\n",
+       " array([     0.,  50000., 100000., 150000., 200000., 250000., 300000.,\n",
+       "        350000., 400000., 450000., 500000.]),\n",
+       " <a list of 10 Patch objects>)"
+      ]
+     },
+     "execution_count": 45,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.hist(my_df.base_salary, bins=10, range= (0, 500000) ) \n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 41,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(array([12.,  5.,  0.,  2.,  0.,  1.,  5.]),\n",
+       " array([1000000.        , 1714285.71428571, 2428571.42857143,\n",
+       "        3142857.14285714, 3857142.85714286, 4571428.57142857,\n",
+       "        5285714.28571429, 6000000.        ]),\n",
+       " <a list of 7 Patch objects>)"
+      ]
+     },
+     "execution_count": 41,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "plt.hist(my_df.base_salary, bins=7, range= (1000000, 6000000) ) "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "These two histograms show the frequency in data in a certain range of nubers. The first one shows how many players are paid between 0 dollars and 500000 dollars and the second one shows how many players are paid between 1 million dollars and 6 million dollars. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Acknowledgements"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This lab was very tough. I got through it with the help of many people. First, I want to give a shoutout to June! She has helped me so much throughout this midterm project. She has helped me figure out why my code is not running and how to fix it. Shoutout Ms. Sconyers for giving me a boost of confidence when she became very excited about my dataset! I really appreciate the non stop help Ms. Sconyers provides to me and the rest of the class. Shoutout Ziah for literally being moral support for me. Another shoutout to Ms. Sconyers for staying after class to help me with my graphs. "
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
